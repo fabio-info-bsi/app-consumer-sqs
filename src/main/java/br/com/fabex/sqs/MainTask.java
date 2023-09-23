@@ -1,16 +1,16 @@
 package br.com.fabex.sqs;
 
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
 import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.model.*;
 
+@Component
 public class MainTask {
 
-    public static void main(String[] args) {
-        new MainTask().readMessageSimpleQueueService();
-    }
-
+    @Scheduled(fixedRate = 60_000, initialDelay = 10_000)
     public void readMessageSimpleQueueService() {
         final String queue = "SQS_ASYNC_REQUEST";
         try (SqsClient sqsClient = SqsClient.builder()
@@ -20,7 +20,6 @@ public class MainTask {
             GetQueueUrlResponse queueUrl = sqsClient.getQueueUrl(GetQueueUrlRequest.builder().queueName(queue).build());
             ReceiveMessageRequest receiveMessageRequest = ReceiveMessageRequest.builder()
                     .queueUrl(queueUrl.queueUrl())
-                    .maxNumberOfMessages(5)
                     .build();
             sqsClient.receiveMessage(receiveMessageRequest).messages().forEach(message -> {
                 try {
@@ -36,5 +35,9 @@ public class MainTask {
                 }
             });
         }
+    }
+
+    public static void main(String[] args) {
+        new MainTask().readMessageSimpleQueueService();
     }
 }
